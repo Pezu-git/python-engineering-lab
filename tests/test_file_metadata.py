@@ -22,8 +22,8 @@ def test_scan_file_info(tmp_path):
 
     assert len(result) == 2
 
-
     assert all(isinstance(item, FileInfo) for item in result)
+    
     for item in result:
 
         expected_text = "console.log('Hello World!')" if item.name == 'script.py' else "This is a test"
