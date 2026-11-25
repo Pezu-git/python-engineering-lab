@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 from collections.abc import Iterator
 from datetime import datetime,timezone
+import time
 
 from file_models import FileInfo
 from file_scanner import scan_files
@@ -13,7 +14,10 @@ def scan_file_info(
 ) -> Iterator[FileInfo]:
     """Получает список файлов и метаданные по каждому"""
     for file in scan_files(directory, extensions):
-        yield get_file_info(file)
+        try:
+            yield get_file_info(file)
+        except FileNotFoundError:
+            print(f"File {file} not found")
 
 
 def get_file_info(path: Path) -> FileInfo:
@@ -43,9 +47,9 @@ def get_file_info(path: Path) -> FileInfo:
     )
 
 
-directory = Path("C://Users/artem/PycharmProjects/python-engineering-lab/tests")
-files = scan_file_info(directory, {".py", ".txt"})
-
-for f in files:
-    print(f)
+# directory = Path("C://Users/coder/PycharmProjects/python-engineering-lab/tests")
+# files = scan_file_info(directory, {".py", ".txt"})
+#
+# for f in files:
+#     print(f)
 
