@@ -1,5 +1,6 @@
 from pathlib import Path
 import pytest
+import logging
 
 
 @pytest.fixture
@@ -18,3 +19,7 @@ def sample_files(tmp_path: Path) -> list[Path]:
         files.append(path)
 
     return files
+
+# @pytest.fixture
+# def test_log(caplog):
+#     caplog.set_level(logging.INFO)

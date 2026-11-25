@@ -1,10 +1,13 @@
 from datetime import datetime,timezone
 from pathlib import Path
 from unittest.mock import patch, MagicMock
+import logging
 
 from file_metadata import scan_file_info
 from file_models import FileInfo
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(filename='logs/metadatas.log', level=logging.INFO)
 
 def test_scan_file_info(tmp_path):
     report_path = tmp_path / "report.txt"
@@ -34,10 +37,12 @@ def test_scan_file_info(tmp_path):
         assert item.modified_at.tzinfo == timezone.utc
 
 
-def test_scan_file_info_one_missing(tmp_path, capsys):
+def test_scan_file_info_one_missing(tmp_path, capsys, caplog):
     first = tmp_path / "first.txt"
     second = tmp_path / "second.txt"
     third = tmp_path / "third.txt"
+
+    caplog.set_level(logging.WARNING, logger="file_metadata")
 
     first.touch()
     second.touch()
@@ -71,8 +76,14 @@ def test_scan_file_info_one_missing(tmp_path, capsys):
 
         assert mocked_info.call_count == 3
 
-        captured = capsys.readouterr()
-        assert "File" in captured.out
-        assert "second.txt" in captured.out
-        assert "not found" in captured.out
+        record = caplog.records[0]
+
+        assert record.levelname == "WARNING"
+        assert "second.txt not found" in record.getMessage()
+
+
+        # captured = capsys.readouterr()
+        # assert "File" in captured.out
+        # assert "second.txt" in captured.out
+        # assert "not found" in captured.out
 
