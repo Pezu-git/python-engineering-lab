@@ -6,21 +6,48 @@ import logging
 from file_models import FileInfo
 from file_scanner import scan_files
 
+from logging_config import configure_logging,configure_logger_separator
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename='logs/metadata.log', level=logging.INFO)
+configure_logging(Path("logs/scanner.log"))
+configure_logger_separator(Path("logs/scanner.log"))
 
+logger = logging.getLogger("file_metadata")
+logger_sep = logging.getLogger("separator")
 
 def scan_file_info(
     directory: Path,
     extensions: set[str] | None = None
 ) -> Iterator[FileInfo]:
     """Получает список файлов и метаданные по каждому"""
-    for file in scan_files(directory, extensions):
-        try:
-            yield get_file_info(file)
-        except FileNotFoundError:
-            logger.warning("File %s not found", file)
+    logger_sep.info("=" * 100)
+
+    files_found_count = 0
+    files_processed_count = 0
+    files_skipped_count = 0
+    try:
+        logger.info("Сканирование началось")
+        for file in scan_files(directory, extensions):
+            files_found_count += 1
+
+            try:
+                file_info = get_file_info(file)
+            except FileNotFoundError:
+                files_skipped_count += 1
+                logger.warning("File %s not found", file)
+                continue
+
+            files_processed_count += 1
+            yield file_info
+    finally:
+        logger.info(f"Сканирование завершено.")
+
+    logger.info(
+        "Найдено: %s | Обработано: %s | Пропущено: %s",
+        files_found_count,
+        files_processed_count,
+        files_skipped_count
+    )
+
 
 
 def get_file_info(path: Path) -> FileInfo:
@@ -50,9 +77,15 @@ def get_file_info(path: Path) -> FileInfo:
     )
 
 
-directory = Path("C://Users/coder/PycharmProjects/python-engineering-lab/tests")
+directory = Path("C://Users/coder/PycharmProjects/python-engineering-lab/testss")
 files = scan_file_info(directory, {".py", ".txt"})
 
-for f in files:
-    print(f)
+
+try:
+    for f in files:
+        print(f.name)
+except FileNotFoundError as e:
+    logger.error(e)
+
+
 
